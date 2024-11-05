@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  controller:
+    build:
+      dockerfile: ./build/controller.Dockerfile
+      context: ./
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  node-template:
+    &node-template
+    build:
+      dockerfile: ./build/node.Dockerfile
+      context: ./
+    networks:
+      - app-network
+
+  node0:
+    <<: *node-template
+  node1:
+    <<: *node-template
+  node2:
+    <<: *node-template
+  node3:
+    <<: *node-template
+  node4:
+    <<: *node-template
+  node5:
+    <<: *node-template
+  node6:
+    <<: *node-template
+  node7:
+    <<: *node-template
+
+networks:
+  app-network:
+    driver: bridge
